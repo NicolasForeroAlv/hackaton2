@@ -1,44 +1,42 @@
-import express from 'express'
-import jwt from 'jsonwebtoken'
-import { encrypt, decrypt } from '../utils/crypto'
-const router = express.Router()
+import { Router, Request, Response } from 'express'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 
-type CompanyStored = { id: string; payload: string } // payload encrypted JSON
+const router = Router()
 
-const companies: CompanyStored[] = []
-
-function authMiddleware(req:any, res:any, next:any){
-  const auth = req.headers.authorization?.split(' ')[1]
-  if (!auth) return res.status(401).json({ message: 'no token' })
-  try {
-    const payload = jwt.verify(auth, process.env.JWT_SECRET || 'secret')
-    (req as any).user = payload
-    next()
-  } catch (err) {
-    return res.status(401).json({ message: 'invalid token' })
-  }
+interface TokenPayload extends JwtPayload {
+  email: string
 }
 
-router.use(authMiddleware)
+// empresas guardadas en memoria
+const companies: any[] = []
 
-router.get('/', (req, res) => {
-  const list = companies.map(c => {
-    try {
-      const obj = JSON.parse(decrypt(c.payload))
-      return { id: c.id, ...obj }
-    } catch { return null }
-  }).filter(Boolean)
-  res.json(list)
+// Crear empresa
+router.post('/', (req: Request, res: Response) => {
+  const token = req.headers.authorization?.split(' ')[1]
+  if (!token) return res.status(401).json({ message: 'Token faltante' })
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET || 'secret') as TokenPayload
+    console.log('Usuario autenticado:', payload.email)
+
+    const { name, nit, employees } = req.body
+
+    if (!name || !nit || !employees) {
+      return res.status(400).json({ message: 'Faltan datos de la empresa' })
+    }
+
+    const newCompany = { id: Date.now().toString(), name, nit, employees }
+    companies.push(newCompany)
+
+    res.json(newCompany)
+  } catch (err) {
+    return res.status(401).json({ message: 'Token inválido' })
+  }
 })
 
-router.post('/', (req,res) => {
-  const { name, nit, employees } = req.body
-  if (!name) return res.status(400).json({ message: 'name required' })
-  const plain = JSON.stringify({ name, nit, employees: Number(employees) || 0 })
-  const payload = encrypt(plain)
-  const id = String(Date.now())
-  companies.push({ id, payload })
-  res.json({ id })
+// Listar empresas
+router.get('/', (req: Request, res: Response) => {
+  res.json(companies)
 })
 
 export default router

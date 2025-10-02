@@ -9,7 +9,11 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 4000
 
-app.use(cors())
+app.use(cors({
+  origin: "*", // o puedes poner la URL del frontend si quieres más seguridad
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}))
 app.use(express.json())
 
 app.use('/auth', authRoutes)
@@ -17,6 +21,9 @@ app.use('/companies', companyRoutes)
 
 app.use(errorHandler)
 
-app.listen(port, ()=> {
-  console.log(`Server listening on http://localhost:${port}`)
+const PORT: number = Number(process.env.PORT) || 4000
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`)
 })
+
