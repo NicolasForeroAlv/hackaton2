@@ -21,6 +21,7 @@ Estructura: cliente (Vite + React + TypeScript) y servidor (Express + TypeScript
 - Login simple con JWT. Datos sensibles de 'companies' se cifran con AES-256-GCM en el servidor.
 - Revisa `server/.env.example` para la clave `JWT_SECRET` y `CRYPTO_KEY` (256-bit hex).
 - Este es un scaffold minimal funcional para desarrollo local.
+- Cambiar las visibilidades de los puertos en publicos
 
 ##GitHUB
 https://github.com/NicolasForeroAlv/hackaton2.git
